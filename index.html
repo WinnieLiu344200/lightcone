@@ -1,0 +1,33 @@
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sci-Fi Universe</title>
+<style>html,body{margin:0;height:100%;background:#03050b;color:#9fb6d8;font:15px/1.6 system-ui,sans-serif;letter-spacing:.08em}
+body{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+i{display:block;width:180px;height:2px;background:#1a2434;overflow:hidden}i b{display:block;height:100%;width:0;background:#8fd0ff;transition:width .3s}</style></head>
+<body><p id="m">Sci-Fi Universe · 科幻宇宙</p><i><b id="bar"></b></i>
+<script>
+/* One page, two languages. The whole site (ship, Earth) exists twice in data/, as site.N.js (中文) and site_en.N.js (English).
+   This page picks one — the URL's #en / #zh, else the last choice, else the browser's language — loads it and writes it in.
+   The site's EN / 中文 button sets the choice and reloads this same page. */
+window.__ONEFILE = true;
+const PARTS = {"zh": ["site", 1], "en": ["site_en", 1]};
+let lang = (location.hash.match(/^#(en|zh)$/) || [])[1];
+if (!lang) { try { lang = localStorage.getItem('scifi-lang'); } catch (e) {} }
+if (lang !== 'en' && lang !== 'zh') lang = /^zh/i.test(navigator.language || '') ? 'zh' : 'en';
+try { localStorage.setItem('scifi-lang', lang); } catch (e) {}
+const [key, n] = PARTS[lang], got = [];
+window.__P = {}; window.__part = (k, i, s) => { got[i] = s; };
+document.getElementById('m').textContent = lang === 'en' ? 'Loading the Lightcone…' : '正在载入光锥号……';
+let i = 0;
+const fail = () => { document.getElementById('m').textContent = lang === 'en' ? 'Could not load data/' + key + '.' + i + '.js — keep the data folder next to this page.' : '载入失败：找不到 data/' + key + '.' + i + '.js（请把 data 文件夹和这个网页放在一起）'; };
+(function next(tries) {
+  if (i >= n) {
+    const html = new TextDecoder().decode(Uint8Array.from(atob(got.join('')), (c) => c.charCodeAt(0)));
+    got.length = 0; document.open(); document.write(html); document.close(); return;
+  }
+  const s = document.createElement('script'); s.src = 'data/' + key + '.' + i + '.js' + (tries ? '?r=' + tries : '');
+  s.onload = () => { s.remove(); i++; document.getElementById('bar').style.width = (i / n * 100) + '%'; next(0); };
+  s.onerror = () => { s.remove(); if (tries < 6) setTimeout(() => next(tries + 1), 600); else fail(); };
+  document.head.appendChild(s);
+})(0);
+</script></body></html>
